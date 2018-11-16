@@ -10,66 +10,67 @@ using Serilog;
 
 namespace Trader.VolumeSpike
 {
-    public class Program
-    {
-	    public static string PathToContentRoot { get; set; }
+	public class Program
+	{
+		public static string PathToContentRoot { get; set; }
 
 		public static int Main(string[] args)
-	    {
+		{
 			var pathToExe = Process.GetCurrentProcess().MainModule.FileName;
 			PathToContentRoot = Path.GetDirectoryName(pathToExe);
 
 			var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-		    var isDevelopment = env == EnvironmentName.Development;
+			var isDevelopment = env == EnvironmentName.Development;
 
-		    if (isDevelopment)
-		    {
-			    PathToContentRoot = Directory.GetCurrentDirectory();
-		    }
+			if (isDevelopment)
+			{
+				PathToContentRoot = Directory.GetCurrentDirectory();
+			}
 
 			var configuration = new ConfigurationBuilder()
-                .SetBasePath(PathToContentRoot)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env ?? "Development"}.json", optional: true)
-                .Build();
+				.SetBasePath(PathToContentRoot)
+				.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+				.AddJsonFile($"appsettings.{env ?? "Development"}.json", optional: true)
+				.Build();
 
-            var isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-            var pathToLogFolder = isLinux
-                ? $"/var/log/{env}.polygon.api/"
-                : $"{PathToContentRoot}/Logs/{env}/";
+			var isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+			var pathToLogFolder = isLinux
+				? $"/var/log/{env}.volumespike.api/"
+				: $"{PathToContentRoot}/Logs/{env}/";
 
-            Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration)
-                .Enrich.FromLogContext()
-                .WriteTo.Async(
-                    a => a.RollingFile(pathToLogFolder + "polygon-{Date}.txt"))
-                .CreateLogger();
+			Log.Logger = new LoggerConfiguration()
+				.ReadFrom.Configuration(configuration)
+				.Enrich.FromLogContext()
+				.WriteTo.Async(
+					a => a.RollingFile(pathToLogFolder + "volumespike-{Date}.txt"))
+				.CreateLogger();
 
-            try
-            {
-	            Log.Warning("Polygon is running...");
+			try
+			{
+				Log.Warning("Polygon is running...");
 
 				if (isDevelopment)
-	            {
-		            CreateWebHostBuilder(args).Build().Run();
+				{
+					CreateWebHostBuilder(args).Build().Run();
 				}
-	            else
-	            {
-					CreateWebHostBuilder(args).Build().RunAsService();
+				else
+				{
+					//CreateWebHostBuilder(args).Build().RunAsService();
+					CreateWebHostBuilder(args).Build();
 				}
 
 				return 0;
-            }
-            catch (Exception ex)
-            {
-                Log.Fatal(ex, "Host terminated unexpectedly");
-                return 1;
-            }
-            finally
-            {
-                Log.CloseAndFlush();
-            }
-        }
+			}
+			catch (Exception ex)
+			{
+				Log.Fatal(ex, "Host terminated unexpectedly");
+				return 1;
+			}
+			finally
+			{
+				Log.CloseAndFlush();
+			}
+		}
 
 		public static IWebHostBuilder CreateWebHostBuilder(string[] args)
 		{
@@ -82,7 +83,7 @@ namespace Trader.VolumeSpike
 				.UseStartup<Startup>()
 				.UseDefaultServiceProvider(options => options.ValidateScopes = false)
 				.CaptureStartupErrors(true)
-				.UseUrls("http://localhost:8000/")
+				.UseUrls("http://localhost:6999/")
 				.UseSerilog();
 		}
 	}
