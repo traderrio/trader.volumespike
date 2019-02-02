@@ -56,7 +56,6 @@ namespace Trader.VolumeSpike
 				else
 				{
 					CreateWebHostBuilder(args).Build().RunAsService();
-					//CreateWebHostBuilder(args).Build();
 				}
 
 				return 0;
