@@ -4,7 +4,7 @@ This is brief technical documentation for `traderr.volumespike` microservice
 
 ### Purpose
 
-`traderr.volumespike` is a `.NET Core 2.0/C#` microservice app used to save streamed last trade information for a specific symbol from [Poligon.io API](https://polygon.io/docs/#!/Stocks--Equities/get_v1_last_stocks_symbol) to local `MongoBD` storage.
+`traderr.volumespike` is a `.NET Core 2.0/C#` microservice app used to identify trending tickers based on spikes in sell and buy volume activity for around 3000 US stocks.
 
 ### Development
 
@@ -14,40 +14,17 @@ This is brief technical documentation for `traderr.volumespike` microservice
 2. Make sure to have installed latest version of [MongoDB](https://www.mongodb.com/)
 3. Pull latest from [GitHub](https://github.com/traderrio/trader.polygon.git)
 4. Run & Build
-5. Access the service at [http://localhost:8000/api/whoami](http://localhost:8000/api/whoami), should see similar response as below
-```json
-{
-  "localTime": "11/06/2018 06:31 AM",
-  "utcTime": "11/06/2018 11:31 AM",
-  "dataProcessingSetting": {
-    "minimumPrice": 1,
-    "maximumPrice": 2000,
-    "preMarketBulkCount": 500,
-    "intraDayBulkCount": 5000,
-    "afterMarketBulkCount": 2000
-  },
-  "spyLastTrade": {
-    "ticker": "SPY",
-    "price": 273.15,
-    "size": 180,
-    "dateTime": "2018-11-06T11:31:20.705Z",
-    "exchange": 11,
-    "collectionName": "StockLastTrades",
-    "id": "5be17b88726ee59ca842a7eb"
-  },
-  "spyLastSavedTradeRecord": "11/06/2018 06:31 AM"
-}
-```
+5. Access the service at [http://localhost:8000/api/whoami](http://localhost:8000/api/whoami
 
 ### Production Deployment
 
-> LastTrade Production deployment steps
+> Production deployment steps
 
 1. In `Visual Studio` click publish and create a new profile or use existing.
-2. Publish to a file system folder of you choice. For Example `C:\GITHUB\201apps\traderr.io\trader.polygon\deployments\cosmos\Trader.Polygon.Api.exe`
+2. Publish to a file system folder of you choice. For Example `C:\Dropbox\IIS\volumespike.traderr.io\microservice\Trader.VolumeSpike.exe`
 3. Create a windows service that will run `Trader.Polygon.Api.exe` for example:
- `sc.exe create Polygon binPath="C:\GITHUB\201apps\traderr.io\trader.polygon\deployments\cosmos\Trader.Polygon.Api.exe --service" DisplayName= "Polygon" start= "auto"`
-4. Access the service at [http://localhost:8000/api/whoami](http://localhost:8000/api/whoami)
+ `sc.exe create TraderrVolumeSpikeService binPath="C:\Dropbox\IIS\volumespike.traderr.io\microservice\Trader.VolumeSpike.exe --service" DisplayName= "TraderrVolumeSpikeService" start= "auto""`
+4. Access the service at [http://localhost:8000/api/whoami](http://localhost:6999/api/whoami)
 5. `Polygon Api` uses the ports below:
 
 "nats://nats1.polygon.io:30401",
