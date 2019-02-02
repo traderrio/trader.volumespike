@@ -6,11 +6,12 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using NATS.Client;
 using Newtonsoft.Json;
-using Serilog;
+using Trader.Common.Enums;
 using Trader.Common.Extensions;
-using Trader.VolumeSpike.Common;
+using Trader.Domain;
+using Trader.Domain.Services;
+using Trader.Services.TradingActivityHelpers;
 using Trader.VolumeSpike.Common.Configuration;
-using Trader.VolumeSpike.Domain;
 using Trader.VolumeSpike.Infrastructure.JsonConverters;
 using Trader.VolumeSpike.Services.Interfaces;
 
@@ -22,22 +23,27 @@ namespace Trader.VolumeSpike.Services
 		private NATS.Client.Options _opts;
 
 		private IConnection _polygonConnection;
-		private IAsyncSubscription _stockQuoteSubscription;
-		private IAsyncSubscription _stockAggregatedSubscription;
 		private IAsyncSubscription _stockLastTradeSubscription;
 		public List<StockLastTrade> StockLastTrades;
-		//public List<SymbolDetails> ValidSymbols { get; set; }
+		private ISymbolService _symbolService;
+		private ILastTradesService _lastTradesService;
+		private IVolumeRecordService _volumeRecordService;
+		public List<SymbolDetails> ValidSymbols { get; set; }
 
-		public PolygonService(IOptions<AppSettings> appSettings)
+		public PolygonService(IOptions<AppSettings> appSettings, ISymbolService symbolService, ILastTradesService lastTradesService, IVolumeRecordService volumeRecordService)
 		{
 			_appSettings = appSettings;
 			SetupOptions();
+			_symbolService = symbolService;
+			_lastTradesService = lastTradesService;
+			_volumeRecordService = volumeRecordService;
 			StockLastTrades = new List<StockLastTrade>(_appSettings.Value.DataProcessing.IntraDayBulkCount);
+			ValidSymbols = _symbolService.GetValidSymbols();
 		}
 
 		public void SubscribeToTrades()
 		{
-			Log.Warning("SubscribeToTrades");
+			Serilog.Log.Warning("SubscribeToTrades");
 
 			EnsureConnectionExists();
 			_stockLastTradeSubscription = _polygonConnection.SubscribeAsync("T.*", StockTradeHandlerAsync);
@@ -75,40 +81,111 @@ namespace Trader.VolumeSpike.Services
 				return;
 			}
 
-			//if (MarketHoursHelper.Now() >= MarketHoursHelper.MarketOpenDateTime() && MarketHoursHelper.Now() < MarketHoursHelper.MarketCloseDateTime())
-			//{
-			//	StockLastTrades.Add(lastTrade);
+			if (ValidSymbols.All(x => x.Symbol != lastTrade.Ticker))
+			{
+				return;
+			}
 
-			//	if (StockLastTrades.Count == _appSettings.Value.DataProcessing.IntraDayBulkCount)
-			//	{
-			//		_polygonDataSaver.SaveBulkLastTradeData(StockLastTrades);
-			//		Console.WriteLine($"{DateTime.Now:dddd, dd MMMM yyyy HH:mm:ss} - bulk records insterted { StockLastTrades.Count } Trades | Total Size: { NumberExtensions.HumanReadable(StockLastTrades.Sum(x => x.Size), 4) }");
-			//		StockLastTrades = new List<StockLastTrade>(_appSettings.Value.DataProcessing.IntraDayBulkCount);
-			//	}
-			//}
-			//else if (MarketHoursHelper.Now() >= MarketHoursHelper.MarketOpenDateTime() && MarketHoursHelper.Now() <= MarketHoursHelper.MarketCloseDateTime().AddMinutes(10))
-			//{
-			//	StockLastTrades.Add(lastTrade);
+			var timeFrame = 15;
+			var length = 10;
+			var ratioPercentage = 50;
+			var toDate = DateTime.Now;
+			var fromDate = toDate.ResolveFromDate(timeFrame);
 
-			//	if (StockLastTrades.Count == _appSettings.Value.DataProcessing.AfterMarketBulkCount)
-			//	{
-			//		_polygonDataSaver.SaveBulkLastTradeData(StockLastTrades);
-			//		Console.WriteLine($"{DateTime.Now:dddd, dd MMMM yyyy HH:mm:ss} - bulk records insterted { StockLastTrades.Count } Trades | Total Size: { NumberExtensions.HumanReadable(StockLastTrades.Sum(x => x.Size), 4) }");
-			//		StockLastTrades = new List<StockLastTrade>(_appSettings.Value.DataProcessing.AfterMarketBulkCount);
-			//	}
-			//}
-			//else
-			//{
-			//	//insert into db whatever trades are left
-			//	if (StockLastTrades.Count > 0)
-			//	{
-			//		_polygonDataSaver.SaveBulkLastTradeData(StockLastTrades);
-			//		Console.WriteLine($"{DateTime.Now:dddd, dd MMMM yyyy HH:mm:ss} - bulk records insterted { StockLastTrades.Count } Trades | Total Size: { NumberExtensions.HumanReadable(StockLastTrades.Sum(x => x.Size), 4) }");
-			//		StockLastTrades = new List<StockLastTrade>(_appSettings.Value.DataProcessing.IntraDayBulkCount);
-			//	}
-			//	_polygonDataSaver.SaveLastTradeData(lastTrade);
-			//	Console.WriteLine($"{DateTime.Now:dddd, dd MMMM yyyy HH:mm:ss} -- { lastTrade.Price } | { lastTrade.Ticker } | { lastTrade.Size }");
-			//}
+			var openMarketStartTime = new DateTime(toDate.Year, toDate.Month, toDate.Day, toDate.Hour, 30, 0);
+
+			List<StockLastTrade> lastTrades = _lastTradesService.GetLastTrades(lastTrade.Ticker, fromDate, toDate, length, timeFrame);
+
+			if (!lastTrades.Any()) return;
+
+			var groups = lastTrades.GroupBy(x =>
+				{
+					var stamp = x.DateTime;
+					stamp = stamp.AddMinutes(-(stamp.Minute % timeFrame));
+					stamp = stamp.AddMilliseconds(-stamp.Millisecond - 1000 * stamp.Second);
+					return stamp;
+				})
+				.Select(g => new OneMinuteDataGroup { TimeStamp = g.Key, LastTrades = g })
+				.Take(length).ToList();
+
+			var groupedRecords = groups.Select(x => new VolumeRecord
+			{
+				Date = x.TimeStamp,
+				Price = (double)x.LastTrades.First().Price,
+				Volume = x.LastTrades.Sum(r => r.Size),
+				VolumeFriendly = x.LastTrades.Sum(r => (double)r.Size).HumanReadable(4),
+				TimeFrame = timeFrame.ToString(),
+				TrendType = TrendType.Neutral,
+			}).ToList();
+
+
+			if (!groupedRecords.Any()) return;
+
+			var records = new List<VolumeRecord>();
+			foreach (var x in groupedRecords.Where(x => x.Date != openMarketStartTime).ToList())
+			{
+				var r = new VolumeRecord();
+				r.Date = x.Date;
+				r.Price = x.Price;
+				r.Volume = x.Volume;
+				r.Ticker = lastTrade.Ticker;
+				r.VolumeFriendly = x.VolumeFriendly;
+				r.TrendType = x.ResolveTrendType(groupedRecords);
+				r.Ratio = x.CalculateRatio(groupedRecords);
+				r.TimeFrame = timeFrame.ToString();
+				r.AverageVolume = groupedRecords.Any(t => t.Date != x.Date)
+					? groupedRecords.Where(t => t.Date != x.Date).Average(a => a.Volume).HumanReadable(4)
+					: "N/A";
+
+				records.Add(r);
+			}
+
+			if (!records.Any()) return;
+
+			var avgRatio = records.Average(x => x.Ratio);
+			var spikeRatio = avgRatio + (avgRatio * ratioPercentage / 100);
+
+			if (records[0].Ratio >= spikeRatio)
+			{
+				var volumeSpike = new Trader.Domain.VolumeSpike
+				{
+					Ticker = lastTrade.Ticker,
+					Date = toDate,
+					MinuteTimeFrame = timeFrame,
+					VolumeRecords = records
+				};
+
+				if (volumeSpike.VolumeRecords.Any())
+				{
+					VolumeRecord volumeRecord = volumeSpike.VolumeRecords[0];
+					volumeRecord.Date = DateTime.Now;
+					volumeRecord.ApiType = ApiType.Polygon;
+
+					var symbol = ValidSymbols.FirstOrDefault(x => x.Symbol == volumeRecord.Ticker);
+
+					if (symbol != null)
+					{
+						volumeRecord.Industry = symbol.Industry;
+						volumeRecord.Sector = symbol.Sector;
+					}
+
+					switch (volumeRecord.TrendType)
+					{
+						case TrendType.Bullish:
+							_volumeRecordService.SaveVolumeRecord(volumeRecord);
+							break;
+						case TrendType.Bearish:
+							_volumeRecordService.SaveVolumeRecord(volumeRecord);
+							break;
+						case TrendType.None:
+							break;
+						case TrendType.Neutral:
+							break;
+						default:
+							throw new ArgumentOutOfRangeException();
+					}
+				}
+			}
 		}
 
 		private bool TryGetMessageAsString(MsgHandlerEventArgs e, out string message)
@@ -149,8 +226,6 @@ namespace Trader.VolumeSpike.Services
 		public void Dispose()
 		{
 			_polygonConnection?.Dispose();
-			_stockQuoteSubscription?.Dispose();
-			_stockAggregatedSubscription?.Dispose();
 			_stockLastTradeSubscription?.Dispose();
 		}
 	}

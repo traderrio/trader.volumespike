@@ -1,5 +1,4 @@
-﻿using FluentScheduler;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -14,7 +13,6 @@ using Trader.VolumeSpike.Common.Configuration;
 using Trader.VolumeSpike.Infrastructure;
 using Trader.VolumeSpike.Infrastructure.DbContext;
 using Trader.VolumeSpike.Infrastructure.DbContext.Interfaces;
-using Trader.VolumeSpike.Infrastructure.Jobs;
 using Trader.VolumeSpike.Services;
 using Trader.VolumeSpike.Services.Interfaces;
 
@@ -65,11 +63,22 @@ namespace Trader.VolumeSpike
 				return new LastTradesDbContext(db, appSettings);
 			});
 
+			services.AddSingleton<ITraderDbContext>(opt =>
+			{
+				var lastTradesConnectionString = new MongoConnectionString(Configuration.GetConnectionString("Traderr"));
+				var client = new MongoClient(lastTradesConnectionString.Settings);
+				var db = client.GetDatabase(lastTradesConnectionString.Database);
+				var appSettings = opt.GetRequiredService<IOptions<AppSettings>>();
+				return new TraderDbContext(db, appSettings);
+			});
+
 			var redisConfiguration = Configuration.GetSection("Redis:Server").Get<RedisConfiguration>();
 			services.AddSingleton(redisConfiguration);
 			services.AddSingleton<ICacheClient, StackExchangeRedisCacheClient>();
 			services.AddSingleton<ISerializer, MsgPackObjectSerializer>();
-			services.AddScoped<ITradingActivityService, TradingActivityService>();
+			services.AddScoped<ISymbolService, SymbolService>();
+			services.AddScoped<ILastTradesService, LastTradesService>();
+			services.AddScoped<IVolumeRecordService, VolumeRecordService>();
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
