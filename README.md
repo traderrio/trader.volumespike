@@ -14,7 +14,7 @@ This is brief technical documentation for `traderr.volumespike` microservice
 2. Make sure to have installed latest version of [MongoDB](https://www.mongodb.com/)
 3. Pull latest from [GitHub](https://github.com/traderrio/trader.polygon.git)
 4. Run & Build
-5. Access the service at [http://localhost:8000/api/whoami](http://localhost:8000/api/whoami
+5. Access the service at [http://localhost:6999/api/whoami](http://localhost:6999/api/whoami
 
 ### Production Deployment
 
