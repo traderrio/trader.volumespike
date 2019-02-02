@@ -76,6 +76,7 @@ namespace Trader.VolumeSpike
 			services.AddSingleton(redisConfiguration);
 			services.AddSingleton<ICacheClient, StackExchangeRedisCacheClient>();
 			services.AddSingleton<ISerializer, MsgPackObjectSerializer>();
+			services.AddScoped<IPolygonService, PolygonService>();
 			services.AddScoped<ISymbolService, SymbolService>();
 			services.AddScoped<ILastTradesService, LastTradesService>();
 			services.AddScoped<IVolumeRecordService, VolumeRecordService>();
