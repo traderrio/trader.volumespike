@@ -55,8 +55,8 @@ namespace Trader.VolumeSpike
 				}
 				else
 				{
-					//CreateWebHostBuilder(args).Build().RunAsService();
-					CreateWebHostBuilder(args).Build();
+					CreateWebHostBuilder(args).Build().RunAsService();
+					//CreateWebHostBuilder(args).Build();
 				}
 
 				return 0;
@@ -83,7 +83,7 @@ namespace Trader.VolumeSpike
 				.UseStartup<Startup>()
 				.UseDefaultServiceProvider(options => options.ValidateScopes = false)
 				.CaptureStartupErrors(true)
-				.UseUrls("http://localhost:6999/")
+				.UseUrls("http://localhost:8005/")
 				.UseSerilog();
 		}
 	}

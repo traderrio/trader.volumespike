@@ -5,12 +5,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using StackExchange.Redis.Extensions.Core;
 using StackExchange.Redis.Extensions.Core.Configuration;
 using StackExchange.Redis.Extensions.MsgPack;
 using Trader.VolumeSpike.Common.Configuration;
 using Trader.VolumeSpike.Infrastructure;
+using Trader.VolumeSpike.Infrastructure.DbContext;
+using Trader.VolumeSpike.Infrastructure.DbContext.Interfaces;
 using Trader.VolumeSpike.Infrastructure.Jobs;
 using Trader.VolumeSpike.Services;
 using Trader.VolumeSpike.Services.Interfaces;
@@ -45,18 +48,22 @@ namespace Trader.VolumeSpike
 
 			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
-			services.AddSingleton(option =>
+			services.AddSingleton<IVolumeSpikeDbContext>(opt =>
 			{
 				var client = new MongoClient(MongoConnectionString.Settings);
-				return client.GetDatabase(MongoConnectionString.Database);
+				var db = client.GetDatabase(MongoConnectionString.Database);
+				IOptions<AppSettings> appSettings = opt.GetRequiredService<IOptions<AppSettings>>();
+				return new VolumeSpikeDbContext(db, appSettings);
 			});
-			services.AddSingleton<IMongoDbContext, MongoDbContext>();
-			services.AddSingleton<MongoPolygonDataSaver>();
-			services.AddSingleton<IPolygonService, PolygonService>();
-			services.AddSingleton<IPolygonDataSaver, PolygonDataSaver>();
 
-			services.AddSingleton<RedisPolygonDataSaver>();
-
+			services.AddSingleton<ILastTradesDbContext>(opt =>
+			{
+				var lastTradesConnectionString = new MongoConnectionString(Configuration.GetConnectionString("LastTrades"));
+				var client = new MongoClient(lastTradesConnectionString.Settings);
+				var db = client.GetDatabase(lastTradesConnectionString.Database);
+				var appSettings = opt.GetRequiredService<IOptions<AppSettings>>();
+				return new LastTradesDbContext(db, appSettings);
+			});
 
 			var redisConfiguration = Configuration.GetSection("Redis:Server").Get<RedisConfiguration>();
 			services.AddSingleton(redisConfiguration);
