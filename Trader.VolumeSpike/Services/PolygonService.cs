@@ -38,7 +38,7 @@ namespace Trader.VolumeSpike.Services
 			_lastTradesService = lastTradesService;
 			_volumeRecordService = volumeRecordService;
 			StockLastTrades = new List<StockLastTrade>(_appSettings.Value.DataProcessing.IntraDayBulkCount);
-			ValidSymbols = _symbolService.GetValidSymbols();
+			LoadSymbols();
 		}
 
 		public void SubscribeToTrades()
@@ -54,6 +54,11 @@ namespace Trader.VolumeSpike.Services
 			_opts = ConnectionFactory.GetDefaultOptions();
 			_opts.Servers = _appSettings.Value.Polygon.StockServers;
 			_opts.Token = _appSettings.Value.Polygon.ApiKey;
+		}
+
+		private void LoadSymbols()
+		{
+			ValidSymbols = _symbolService.GetValidSymbols();
 		}
 
 		private void StockTradeHandlerAsync(object sender, MsgHandlerEventArgs e)
