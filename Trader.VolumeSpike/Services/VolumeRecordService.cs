@@ -22,7 +22,7 @@ namespace Trader.VolumeSpike.Services
 
 		public async Task<VolumeRecord> LastVolumeRecordAsync()
 		{
-			return await _collection.AsQueryable().OrderBy(x => x.Date).FirstOrDefaultAsync();
+			return await _collection.AsQueryable().OrderByDescending(x => x.Date).FirstOrDefaultAsync();
 		}
 	}
 }

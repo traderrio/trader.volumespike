@@ -75,12 +75,6 @@ namespace Trader.VolumeSpike.Services
 				return;
 			}
 
-
-			if (lastTrade.Price < 1 || lastTrade.Price > 2000)
-			{
-				return;
-			}
-
 			if (lastTrade.Price < _appSettings.Value.DataProcessing.MinimumPrice && lastTrade.Price > _appSettings.Value.DataProcessing.MaximumPrice)
 			{
 				return;
@@ -91,27 +85,24 @@ namespace Trader.VolumeSpike.Services
 				return;
 			}
 
-			var timeFrame = 15;
-			var length = 10;
-			var ratioPercentage = 50;
 			var toDate = DateTime.Now;
-			var fromDate = toDate.ResolveFromDate(timeFrame);
+			var fromDate = toDate.ResolveFromDate(_appSettings.Value.DataProcessing.TimeFrame);
 
 			var openMarketStartTime = new DateTime(toDate.Year, toDate.Month, toDate.Day, toDate.Hour, 30, 0);
 
-			List<StockLastTrade> lastTrades = _lastTradesService.GetLastTrades(lastTrade.Ticker, fromDate, toDate, length, timeFrame);
+			List<StockLastTrade> lastTrades = _lastTradesService.GetLastTrades(lastTrade.Ticker, fromDate, toDate, _appSettings.Value.DataProcessing.RecordLength, _appSettings.Value.DataProcessing.TimeFrame);
 
 			if (!lastTrades.Any()) return;
 
 			var groups = lastTrades.GroupBy(x =>
 				{
 					var stamp = x.DateTime;
-					stamp = stamp.AddMinutes(-(stamp.Minute % timeFrame));
+					stamp = stamp.AddMinutes(-(stamp.Minute % _appSettings.Value.DataProcessing.TimeFrame));
 					stamp = stamp.AddMilliseconds(-stamp.Millisecond - 1000 * stamp.Second);
 					return stamp;
 				})
 				.Select(g => new OneMinuteDataGroup { TimeStamp = g.Key, LastTrades = g })
-				.Take(length).ToList();
+				.Take(_appSettings.Value.DataProcessing.RecordLength).ToList();
 
 			var groupedRecords = groups.Select(x => new VolumeRecord
 			{
@@ -119,7 +110,7 @@ namespace Trader.VolumeSpike.Services
 				Price = (double)x.LastTrades.First().Price,
 				Volume = x.LastTrades.Sum(r => r.Size),
 				VolumeFriendly = x.LastTrades.Sum(r => (double)r.Size).HumanReadable(4),
-				TimeFrame = timeFrame.ToString(),
+				TimeFrame = _appSettings.Value.DataProcessing.TimeFrame.ToString(),
 				TrendType = TrendType.Neutral,
 			}).ToList();
 
@@ -137,7 +128,7 @@ namespace Trader.VolumeSpike.Services
 				r.VolumeFriendly = x.VolumeFriendly;
 				r.TrendType = x.ResolveTrendType(groupedRecords);
 				r.Ratio = x.CalculateRatio(groupedRecords);
-				r.TimeFrame = timeFrame.ToString();
+				r.TimeFrame = _appSettings.Value.DataProcessing.TimeFrame.ToString();
 				r.AverageVolume = groupedRecords.Any(t => t.Date != x.Date)
 					? groupedRecords.Where(t => t.Date != x.Date).Average(a => a.Volume).HumanReadable(4)
 					: "N/A";
@@ -148,7 +139,7 @@ namespace Trader.VolumeSpike.Services
 			if (!records.Any()) return;
 
 			var avgRatio = records.Average(x => x.Ratio);
-			var spikeRatio = avgRatio + (avgRatio * ratioPercentage / 100);
+			var spikeRatio = avgRatio + (avgRatio * _appSettings.Value.DataProcessing.RatioPercentage / 100);
 
 			if (records[0].Ratio >= spikeRatio)
 			{
@@ -156,7 +147,7 @@ namespace Trader.VolumeSpike.Services
 				{
 					Ticker = lastTrade.Ticker,
 					Date = toDate,
-					MinuteTimeFrame = timeFrame,
+					MinuteTimeFrame = _appSettings.Value.DataProcessing.TimeFrame,
 					VolumeRecords = records
 				};
 

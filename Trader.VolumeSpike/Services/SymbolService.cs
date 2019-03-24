@@ -20,7 +20,7 @@ namespace Trader.VolumeSpike.Services
 		{
 			return _symbolCollection
 									.AsQueryable()
-									.Where(x => x.TypeEnum == SymbolType.Stock && !x.IsOtc)
+									.Where(x => !x.IsOtc)
 									.ToList();
 		}
 	}
