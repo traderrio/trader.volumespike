@@ -32,7 +32,7 @@ namespace Trader.VolumeSpike.Controllers
 				UtcTime = DateTime.UtcNow.ToString("MM/dd/yyyy hh:mm tt"),
 				DataProcessingSetting = _appSettings.Value.DataProcessing,
 				LastVolumeRecord = lastVolumeRecord,
-				LastVolumeRecordDate = lastVolumeRecord?.Date.ToString(CultureInfo.InvariantCulture)
+				LastVolumeRecordDate = lastVolumeRecord?.Date.ToLocalTime().ToString("MM/dd/yyyy hh:mm tt")
 			};
 			return Ok(response);
 		}
