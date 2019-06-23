@@ -22,7 +22,7 @@ This is brief technical documentation for `traderr.volumespike` microservice
 
 1. In `Visual Studio` click publish and create a new profile or use existing.
 2. Publish to a file system folder of you choice. For Example `C:\Dropbox\IIS\volumespike.traderr.io\microservice\Trader.VolumeSpike.exe`
-3. Create a windows service that will run `Trader.Polygon.Api.exe` for example:
+3. Create a windows service that will run `Trader.VolumeSpike.exe` for example:
  `sc.exe create TraderrVolumeSpikeService binPath="C:\Dropbox\IIS\volumespike.traderr.io\microservice\Trader.VolumeSpike.exe --service" DisplayName= "TraderrVolumeSpikeService" start= "auto""`
 4. Access the service at [http://localhost:8000/api/whoami](http://localhost:6999/api/whoami)
 5. `Polygon Api` uses the ports below:
