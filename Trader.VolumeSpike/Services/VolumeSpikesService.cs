@@ -1,76 +1,67 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
+using Easy.MessageHub;
 using Microsoft.Extensions.Options;
-using NATS.Client;
-using Newtonsoft.Json;
 using Trader.Common.Enums;
 using Trader.Common.Extensions;
 using Trader.Domain;
 using Trader.Domain.Services;
 using Trader.Services.TradingActivityHelpers;
 using Trader.VolumeSpike.Common.Configuration;
-using Trader.VolumeSpike.Infrastructure.JsonConverters;
+using Trader.VolumeSpike.Infrastructure;
 using Trader.VolumeSpike.Services.Interfaces;
 
 namespace Trader.VolumeSpike.Services
 {
-	public class PolygonService : IPolygonService, IDisposable
+	public interface IVolumeSpikesDetector
 	{
-		private readonly IOptions<AppSettings> _appSettings;
-		private NATS.Client.Options _opts;
+	}
 
-		private IConnection _polygonConnection;
-		private IAsyncSubscription _stockLastTradeSubscription;
-		public List<StockLastTrade> StockLastTrades;
-		private ISymbolService _symbolService;
-		private ILastTradesService _lastTradesService;
-		private IVolumeRecordService _volumeRecordService;
-		public List<SymbolDetails> ValidSymbols { get; set; }
+	public class VolumeSpikesDetector : IVolumeSpikesDetector
+	{
+	    private readonly IOptions<AppSettings> _appSettings;
+        private readonly ISymbolService _symbolService;
+        private readonly ILastTradesService _lastTradesService;
+        private readonly IVolumeRecordService _volumeRecordService;
 
-		public PolygonService(IOptions<AppSettings> appSettings, ISymbolService symbolService, ILastTradesService lastTradesService, IVolumeRecordService volumeRecordService)
-		{
-			_appSettings = appSettings;
-			SetupOptions();
-			_symbolService = symbolService;
-			_lastTradesService = lastTradesService;
-			_volumeRecordService = volumeRecordService;
-			StockLastTrades = new List<StockLastTrade>(_appSettings.Value.DataProcessing.IntraDayBulkCount);
-			LoadSymbols();
-		}
+        private IList<SymbolDetails> ValidSymbols { get; set; }
 
-		public void SubscribeToTrades()
-		{
-			Serilog.Log.Warning("SubscribeToTrades");
+        public VolumeSpikesDetector(IMessageHub messageHub,
+	        IOptions<AppSettings> appSettings,
+	        ISymbolService symbolService, 
+	        ILastTradesService lastTradesService, 
+	        IVolumeRecordService volumeRecordService)
+        {
+	        _appSettings = appSettings;
+	        _symbolService = symbolService;
+	        _lastTradesService = lastTradesService;
+	        _volumeRecordService = volumeRecordService;
 
-			EnsureConnectionExists();
-			_stockLastTradeSubscription = _polygonConnection.SubscribeAsync("T.*", StockTradeHandlerAsync);
-		}
+	        LoadSymbols();
+	        
+	        messageHub.Subscribe<IList<StreamingMessage>>(HandleMessages);
+        }
+        
+        private void LoadSymbols()
+        {
+	        ValidSymbols = _symbolService.GetValidSymbols();
+        }
 
-		private void SetupOptions()
-		{
-			_opts = ConnectionFactory.GetDefaultOptions();
-			_opts.Servers = _appSettings.Value.Polygon.StockServers;
-			_opts.Token = _appSettings.Value.Polygon.ApiKey;
-		}
-
-		private void LoadSymbols()
-		{
-			ValidSymbols = _symbolService.GetValidSymbols();
-		}
-
-		private void StockTradeHandlerAsync(object sender, MsgHandlerEventArgs e)
-		{
-			if (TryGetMessageAsString(e, out var message))
-			{
-				return;
-			}
-
-			StockLastTrade lastTrade = Deserialize<StockLastTrade>(message, new PolygonStockTradeConverter());
-
-			if (string.IsNullOrWhiteSpace(lastTrade?.Ticker) || lastTrade.Price == 0 || lastTrade.Size == 0)
+        private void HandleMessages(IList<StreamingMessage> messages)
+        {
+	        foreach (var message in messages)
+	        {
+		        if (message is StockLastTradeMessage tradeMessage)
+		        {
+			        Detect(tradeMessage);
+		        }
+	        }
+        }
+        
+        private void Detect(StockLastTradeMessage lastTrade)
+        {
+	        if (string.IsNullOrWhiteSpace(lastTrade?.Ticker) || lastTrade.Price == 0 || lastTrade.Size == 0)
 			{
 				return;
 			}
@@ -182,47 +173,6 @@ namespace Trader.VolumeSpike.Services
 					}
 				}
 			}
-		}
-
-		private bool TryGetMessageAsString(MsgHandlerEventArgs e, out string message)
-		{
-			if (e.Message.Data == null)
-			{
-				message = string.Empty;
-				return false;
-			}
-
-			message = Encoding.UTF8.GetString(e.Message.Data);
-			return string.IsNullOrWhiteSpace(message);
-		}
-
-
-		private T Deserialize<T>(string message, JsonConverter converter)
-		{
-			T prices;
-			using (var sr = new StringReader(message))
-			{
-				using (var jr = new JsonTextReader(sr))
-				{
-					prices = (T)converter.ReadJson(jr, typeof(T), null, null);
-				}
-			}
-
-			return prices;
-		}
-
-		private void EnsureConnectionExists()
-		{
-			if (_polygonConnection == null || _polygonConnection.IsClosed())
-			{
-				_polygonConnection = new ConnectionFactory().CreateConnection(_opts);
-			}
-		}
-
-		public void Dispose()
-		{
-			_polygonConnection?.Dispose();
-			_stockLastTradeSubscription?.Dispose();
-		}
-	}
+        }
+    }
 }

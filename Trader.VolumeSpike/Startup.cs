@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Easy.MessageHub;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -44,7 +45,7 @@ namespace Trader.VolumeSpike
 			services.Configure<AppSettings>(Configuration);
 			services.AddSingleton(Configuration);
 
-			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
 			services.AddSingleton<IVolumeSpikeDbContext>(opt =>
 			{
@@ -72,11 +73,11 @@ namespace Trader.VolumeSpike
 				return new TraderDbContext(db, appSettings);
 			});
 
-			var redisConfiguration = Configuration.GetSection("Redis:Server").Get<RedisConfiguration>();
-			services.AddSingleton(redisConfiguration);
+			services.AddSingleton<IMessageHub, MessageHub>();
 			services.AddSingleton<ICacheClient, StackExchangeRedisCacheClient>();
 			services.AddSingleton<ISerializer, MsgPackObjectSerializer>();
-			services.AddScoped<IPolygonService, PolygonService>();
+			services.AddSingleton<IVolumeSpikesDetector, VolumeSpikesDetector>();
+			services.AddSingleton<IPolygonWsClient, PolygonWsClient>();
 			services.AddScoped<ISymbolService, SymbolService>();
 			services.AddScoped<ILastTradesService, LastTradesService>();
 			services.AddScoped<IVolumeRecordService, VolumeRecordService>();

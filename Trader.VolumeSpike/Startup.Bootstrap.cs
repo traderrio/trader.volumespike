@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
+using Trader.VolumeSpike.Services;
 using Trader.VolumeSpike.Services.Interfaces;
 
 namespace Trader.VolumeSpike
@@ -8,8 +9,9 @@ namespace Trader.VolumeSpike
 	{
 		private void Bootstrap(IServiceProvider serviceProvider)
 		{
-			var polygonService = serviceProvider.GetRequiredService<IPolygonService>();
-			polygonService.SubscribeToTrades();
+			serviceProvider.GetRequiredService<IVolumeSpikesDetector>();
+			var polygonWsClient = serviceProvider.GetRequiredService<IPolygonWsClient>();
+			polygonWsClient.RegisterAll();
 		}
 	}
 }

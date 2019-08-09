@@ -47,7 +47,7 @@ namespace Trader.VolumeSpike
 
 			try
 			{
-				Log.Warning("Polygon is running...");
+				Log.Warning("VolumeSpikes is running...");
 
 				if (isDevelopment)
 				{
