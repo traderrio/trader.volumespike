@@ -11,6 +11,7 @@ using Trader.Services.TradingActivityHelpers;
 using Trader.VolumeSpike.Common.Configuration;
 using Trader.VolumeSpike.Infrastructure;
 using Trader.VolumeSpike.Services.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace Trader.VolumeSpike.Services
 {
@@ -24,6 +25,7 @@ namespace Trader.VolumeSpike.Services
         private readonly ISymbolService _symbolService;
         private readonly ILastTradesService _lastTradesService;
         private readonly IVolumeRecordService _volumeRecordService;
+        private readonly ILogger<VolumeSpikesDetector> _logger;
 
         private IList<SymbolDetails> ValidSymbols { get; set; }
 
@@ -31,9 +33,11 @@ namespace Trader.VolumeSpike.Services
 	        IOptions<AppSettings> appSettings,
 	        ISymbolService symbolService, 
 	        ILastTradesService lastTradesService, 
-	        IVolumeRecordService volumeRecordService)
+	        IVolumeRecordService volumeRecordService,
+            ILogger<VolumeSpikesDetector> logger)
         {
-	        _appSettings = appSettings;
+            _logger = logger;
+            _appSettings = appSettings;
 	        _symbolService = symbolService;
 	        _lastTradesService = lastTradesService;
 	        _volumeRecordService = volumeRecordService;
@@ -61,31 +65,33 @@ namespace Trader.VolumeSpike.Services
         
         private void Detect(StockLastTradeMessage lastTrade)
         {
-	        if (string.IsNullOrWhiteSpace(lastTrade?.Ticker) || lastTrade.Price == 0 || lastTrade.Size == 0)
+
+            if (string.IsNullOrWhiteSpace(lastTrade?.Ticker) || lastTrade.Price == 0 || lastTrade.Size == 0)
 			{
-				return;
+                return;
 			}
 
 			if (lastTrade.Price < _appSettings.Value.DataProcessing.MinimumPrice && lastTrade.Price > _appSettings.Value.DataProcessing.MaximumPrice)
 			{
-				return;
+                return;
 			}
 
 			if (ValidSymbols.All(x => x.Symbol != lastTrade.Ticker))
 			{
-				return;
+                return;
 			}
 
-			var toDate = DateTime.Now;
+            var toDate = DateTime.Now;
 			var fromDate = toDate.ResolveFromDate(_appSettings.Value.DataProcessing.TimeFrame);
 
-			var openMarketStartTime = new DateTime(toDate.Year, toDate.Month, toDate.Day, toDate.Hour, 30, 0);
 
-			List<StockLastTrade> lastTrades = _lastTradesService.GetLastTrades(lastTrade.Ticker, fromDate, toDate, _appSettings.Value.DataProcessing.RecordLength, _appSettings.Value.DataProcessing.TimeFrame);
+			var openMarketStartTime = new DateTime(toDate.Year, toDate.Month, toDate.Day, 9, 30, 0);
 
-			if (!lastTrades.Any()) return;
+            List<StockLastTrade> lastTrades = _lastTradesService.GetLastTrades(lastTrade.Ticker, fromDate, toDate, _appSettings.Value.DataProcessing.RecordLength, _appSettings.Value.DataProcessing.TimeFrame);
 
-			var groups = lastTrades.GroupBy(x =>
+            if (!lastTrades.Any()) return;
+
+            var groups = lastTrades.GroupBy(x =>
 				{
 					var stamp = x.DateTime;
 					stamp = stamp.AddMinutes(-(stamp.Minute % _appSettings.Value.DataProcessing.TimeFrame));
@@ -108,7 +114,7 @@ namespace Trader.VolumeSpike.Services
 
 			if (!groupedRecords.Any()) return;
 
-			var records = new List<VolumeRecord>();
+            var records = new List<VolumeRecord>();
 			foreach (var x in groupedRecords.Where(x => x.Date != openMarketStartTime).ToList())
 			{
 				var r = new VolumeRecord();
@@ -159,10 +165,12 @@ namespace Trader.VolumeSpike.Services
 					switch (volumeRecord.TrendType)
 					{
 						case TrendType.Bullish:
-							_volumeRecordService.SaveVolumeRecord(volumeRecord);
+                            _logger.LogInformation("---------MADE IT 1-------------r");
+                            _volumeRecordService.SaveVolumeRecord(volumeRecord);
 							break;
 						case TrendType.Bearish:
-							_volumeRecordService.SaveVolumeRecord(volumeRecord);
+                            _logger.LogInformation("---------MADE IT 2-------------r");
+                            _volumeRecordService.SaveVolumeRecord(volumeRecord);
 							break;
 						case TrendType.None:
 							break;
