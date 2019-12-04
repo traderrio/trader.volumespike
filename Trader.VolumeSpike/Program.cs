@@ -27,7 +27,7 @@ namespace Trader.VolumeSpike
 				PathToContentRoot = Directory.GetCurrentDirectory();
 			}
 
-			var configuration = new ConfigurationBuilder()
+            var configuration = new ConfigurationBuilder()
 				.SetBasePath(PathToContentRoot)
 				.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
 				.AddJsonFile($"appsettings.{env ?? "Development"}.json", optional: true)
@@ -48,8 +48,9 @@ namespace Trader.VolumeSpike
 			try
 			{
 				Log.Warning("VolumeSpikes is running...");
+                Log.Warning($"Is Development? {isDevelopment}");
 
-				if (isDevelopment)
+                if (isDevelopment)
 				{
 					CreateWebHostBuilder(args).Build().Run();
 				}
