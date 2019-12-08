@@ -18,13 +18,14 @@ This microservice depends on the [https://polygon.traderr.io/api/whoami](https:/
 5. Access the service at [http://localhost:6999/api/whoami](http://localhost:6999/api/whoami
 
 ### Production Deployment
+This microservice is currently being installed as a window service on the `Apollo` server.
+Open Windows services and look for `TraderrVolumeSpikeService` service to see if its running.
 
 > Manual Production deployment steps
 
 1. In `Visual Studio` click publish and create a new profile or use existing.
 2. Make sure to select Target Runtime as win-x64
 3. Publish to a file system folder of you choice. For Example `C:\inetpub\apps\trader.volumespike\Trader.VolumeSpike.exe`
-3. Create a windows service that will run `Trader.VolumeSpike.exe` for example:
+4. Create a windows service that will run `Trader.VolumeSpike.exe` for example:
  `sc.exe create TraderrVolumeSpikeService binPath="C:\inetpub\apps\trader.volumespike\Trader.VolumeSpike.exe --service" DisplayName= "VolumeSpikeService" start= "auto""`
-4. Access the service at [http://localhost:8005/api/whoami](http://localhost:8005/api/whoami)
-5. `Polygon Api` uses the ports below:
+5. Access the service at [http://localhost:8005/api/whoami](http://localhost:8005/api/whoami)
