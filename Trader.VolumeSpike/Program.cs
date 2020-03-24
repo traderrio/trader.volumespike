@@ -10,9 +10,8 @@ namespace Trader.VolumeSpike
 {
 	public class Program
 	{
-		public static string PathToContentRoot { get; set; }
 
-		public static int Main(string[] args)
+        public static int Main(string[] args)
 		{
 			//var pathToExe = Process.GetCurrentProcess().MainModule.FileName;
 			//PathToContentRoot = Path.GetDirectoryName(pathToExe);
@@ -20,10 +19,6 @@ namespace Trader.VolumeSpike
 			var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 			var isDevelopment = env == EnvironmentName.Development;
 
-			if (isDevelopment)
-			{
-				PathToContentRoot = Directory.GetCurrentDirectory();
-			}
 
             var configuration = new ConfigurationBuilder()
 				.SetBasePath(Directory.GetCurrentDirectory())
@@ -34,7 +29,7 @@ namespace Trader.VolumeSpike
 			var isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 			var pathToLogFolder = isLinux
 				? $"/var/log/{env}.volumespike.api/"
-				: $"{PathToContentRoot}/Logs/{env}/";
+				: $"Logs/{env}/";
 
 			Log.Logger = new LoggerConfiguration()
 				.ReadFrom.Configuration(configuration)
@@ -66,12 +61,7 @@ namespace Trader.VolumeSpike
 		public static IWebHostBuilder CreateWebHostBuilder(string[] args)
 		{
 			return WebHost.CreateDefaultBuilder(args)
-				.ConfigureAppConfiguration((context, config) =>
-				{
-					// Configure the app here.
-				})
-				.UseContentRoot(PathToContentRoot)
-				.UseStartup<Startup>()
+                .UseStartup<Startup>()
 				.UseDefaultServiceProvider(options => options.ValidateScopes = false)
 				.CaptureStartupErrors(true)
 				.UseUrls("http://localhost:8005/")
