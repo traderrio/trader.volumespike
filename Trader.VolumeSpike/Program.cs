@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.WindowsServices;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 
@@ -10,18 +12,23 @@ namespace Trader.VolumeSpike
 {
 	public class Program
 	{
+		public static string PathToContentRoot { get; set; }
 
-        public static int Main(string[] args)
+		public static int Main(string[] args)
 		{
-			//var pathToExe = Process.GetCurrentProcess().MainModule.FileName;
-			//PathToContentRoot = Path.GetDirectoryName(pathToExe);
+			var pathToExe = Process.GetCurrentProcess().MainModule.FileName;
+			PathToContentRoot = Path.GetDirectoryName(pathToExe);
 
 			var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 			var isDevelopment = env == EnvironmentName.Development;
 
+			if (isDevelopment)
+			{
+				PathToContentRoot = Directory.GetCurrentDirectory();
+			}
 
             var configuration = new ConfigurationBuilder()
-				.SetBasePath(Directory.GetCurrentDirectory())
+				.SetBasePath(PathToContentRoot)
 				.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
 				.AddJsonFile($"appsettings.{env ?? "Development"}.json", optional: true)
 				.Build();
@@ -29,7 +36,7 @@ namespace Trader.VolumeSpike
 			var isLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 			var pathToLogFolder = isLinux
 				? $"/var/log/{env}.volumespike.api/"
-				: $"Logs/{env}/";
+				: $"{PathToContentRoot}/Logs/{env}/";
 
 			Log.Logger = new LoggerConfiguration()
 				.ReadFrom.Configuration(configuration)
@@ -43,7 +50,14 @@ namespace Trader.VolumeSpike
 				Log.Warning("VolumeSpikes is running...");
                 Log.Warning($"Is Development? {isDevelopment}");
 
-                CreateWebHostBuilder(args).Build().Run();
+                if (isDevelopment)
+				{
+					CreateWebHostBuilder(args).Build().Run();
+				}
+				else
+				{
+					CreateWebHostBuilder(args).Build().RunAsService();
+				}
 
 				return 0;
 			}
@@ -61,7 +75,12 @@ namespace Trader.VolumeSpike
 		public static IWebHostBuilder CreateWebHostBuilder(string[] args)
 		{
 			return WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>()
+				.ConfigureAppConfiguration((context, config) =>
+				{
+					// Configure the app here.
+				})
+				.UseContentRoot(PathToContentRoot)
+				.UseStartup<Startup>()
 				.UseDefaultServiceProvider(options => options.ValidateScopes = false)
 				.CaptureStartupErrors(true)
 				.UseUrls("http://localhost:8005/")
