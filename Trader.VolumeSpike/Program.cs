@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.WindowsServices;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 
@@ -16,8 +14,8 @@ namespace Trader.VolumeSpike
 
 		public static int Main(string[] args)
 		{
-			var pathToExe = Process.GetCurrentProcess().MainModule.FileName;
-			PathToContentRoot = Path.GetDirectoryName(pathToExe);
+			//var pathToExe = Process.GetCurrentProcess().MainModule.FileName;
+			//PathToContentRoot = Path.GetDirectoryName(pathToExe);
 
 			var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 			var isDevelopment = env == EnvironmentName.Development;
@@ -28,7 +26,7 @@ namespace Trader.VolumeSpike
 			}
 
             var configuration = new ConfigurationBuilder()
-				.SetBasePath(PathToContentRoot)
+				.SetBasePath(Directory.GetCurrentDirectory())
 				.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
 				.AddJsonFile($"appsettings.{env ?? "Development"}.json", optional: true)
 				.Build();
