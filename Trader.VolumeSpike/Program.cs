@@ -50,14 +50,7 @@ namespace Trader.VolumeSpike
 				Log.Warning("VolumeSpikes is running...");
                 Log.Warning($"Is Development? {isDevelopment}");
 
-                if (isDevelopment)
-				{
-					CreateWebHostBuilder(args).Build().Run();
-				}
-				else
-				{
-					CreateWebHostBuilder(args).Build().RunAsService();
-				}
+                CreateWebHostBuilder(args).Build().Run();
 
 				return 0;
 			}
