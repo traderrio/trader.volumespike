@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  trader.volumespike:
+    image: ${DOCKER_REGISTRY-}tradervolumespike
+    build:
+      context: .
+      dockerfile: Trader.VolumeSpike/Dockerfile
