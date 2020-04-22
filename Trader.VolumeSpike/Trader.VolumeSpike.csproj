@@ -19,7 +19,7 @@
     <PackageReference Include="Flurl" Version="3.0.0-pre3" />
     <PackageReference Include="Flurl.Http" Version="3.0.0-pre3" />
     <PackageReference Include="MessagePack">
-      <Version>1.7.3.7</Version>
+      <Version>1.9.11</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting.WindowsServices" Version="2.2.0" />
