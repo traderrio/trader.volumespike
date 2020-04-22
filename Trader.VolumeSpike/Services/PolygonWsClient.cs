@@ -43,7 +43,8 @@ namespace Trader.VolumeSpike.Services
             _logger = logger;
             _products = new List<IProductModel>();
 
-            var url = appSettings.Value.Microservices.PolygonStockPricesWs;
+            var url = $"{appSettings.Value.Microservices.PolygonApi}/stocks/prices";
+
             if (string.IsNullOrWhiteSpace(url))
             {
                 _logger.LogCritical("Polygon websocket url is null");

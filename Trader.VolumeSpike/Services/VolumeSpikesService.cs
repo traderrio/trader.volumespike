@@ -88,7 +88,7 @@ namespace Trader.VolumeSpike.Services
 
 			var openMarketStartTime = new DateTime(toDate.Year, toDate.Month, toDate.Day, 9, 30, 0);
 
-            List<StockLastTrade> lastTrades = _lastTradesService.GetLastTrades(lastTrade.Ticker, fromDate, toDate, _appSettings.Value.DataProcessing.RecordLength, _appSettings.Value.DataProcessing.TimeFrame);
+            List<StockLastTrade> lastTrades = _lastTradesService.GetLastTrades(lastTrade.Ticker, fromDate, toDate, _appSettings.Value.DataProcessing.RecordLength, _appSettings.Value.DataProcessing.TimeFrame).GetAwaiter().GetResult();
 
             if (!lastTrades.Any()) return;
 

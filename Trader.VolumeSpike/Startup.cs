@@ -54,15 +54,6 @@ namespace Trader.VolumeSpike
 				return new VolumeSpikeDbContext(db, appSettings);
 			});
 
-			services.AddSingleton<ILastTradesDbContext>(opt =>
-			{
-				var lastTradesConnectionString = new MongoConnectionString(Configuration.GetConnectionString("LastTrades"));
-				var client = new MongoClient(lastTradesConnectionString.Settings);
-				var db = client.GetDatabase(lastTradesConnectionString.Database);
-				var appSettings = opt.GetRequiredService<IOptions<AppSettings>>();
-				return new LastTradesDbContext(db, appSettings);
-			});
-
             services.AddSingleton<IMessageHub, MessageHub>();
 			services.AddSingleton<ICacheClient, StackExchangeRedisCacheClient>();
 			services.AddSingleton<ISerializer, MsgPackObjectSerializer>();

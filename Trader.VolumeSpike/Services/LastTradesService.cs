@@ -1,35 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using MongoDB.Driver;
+using Flurl.Http;
+using MessagePack;
+using Microsoft.Extensions.Options;
 using Trader.Domain;
-using Trader.VolumeSpike.Infrastructure.DbContext.Interfaces;
+using Trader.VolumeSpike.Common.Configuration;
+using Trader.VolumeSpike.Infrastructure;
 using Trader.VolumeSpike.Services.Interfaces;
 
 namespace Trader.VolumeSpike.Services
 {
 	public class LastTradesService : ILastTradesService
 	{
-		private readonly IMongoCollection<StockLastTrade> _stockLastTradeCollection;
-		public LastTradesService(ILastTradesDbContext dbContext)
-		{
-			_stockLastTradeCollection = dbContext.GetCollection<StockLastTrade>();
-		}
+        private readonly IOptions<AppSettings> _appSettings;
 
-		public async Task<IList<StockLastTrade>> GetLastTrades(string ticker, DateTime from)
+		public LastTradesService(IOptions<AppSettings> appSettings)
 		{
-			var stockLastTrades = await _stockLastTradeCollection.Find(x => x.Ticker == ticker & x.DateTime >= from)
-				.ToListAsync();
+            _appSettings = appSettings;
+        }
 
-			return stockLastTrades;
-		}
-
-		public List<StockLastTrade> GetLastTrades(string ticker, DateTime fromDate, DateTime to, int length, int timeFrame)
+        public async Task<List<StockLastTrade>> GetLastTrades(string ticker, DateTime fromDate, DateTime to, int length, int timeFrame)
 		{
-			var minuteSort = Builders<StockLastTrade>.Sort.Descending(x => x.DateTime);
-			var backMinutes = length * timeFrame;
-			fromDate = fromDate.AddMinutes(-backMinutes);
-			return _stockLastTradeCollection.Find(x => x.Ticker == ticker && x.DateTime >= fromDate && x.DateTime <= to).Sort(minuteSort).ToList();
-		}
+            var url = $"{_appSettings.Value.Microservices.PolygonApi}/api/trading-activity/last-trades?ticker={ticker}&fromDate={fromDate}&to={to}&length={length}&timeFrame={timeFrame}";
+
+            var response = await url.GetJsonAsync<BinaryIntegrationResponse>();
+
+            if (!response.Success)
+            {
+                return new List<StockLastTrade>();
+            }
+
+            var data = MessagePackSerializer.Deserialize<List<StockLastTrade>>(response.Result, MessagePack.Resolvers.ContractlessStandardResolver.Instance);
+
+            return data;
+        }
 	}
 }
