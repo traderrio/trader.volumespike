@@ -19,7 +19,7 @@
 #WORKDIR /app
 #COPY --from=publish /app/publish .
 #ENTRYPOINT ["dotnet", "Trader.VolumeSpike.dll"]
-#
+
 
 
 #Use this for builing docker hub image  
@@ -39,3 +39,4 @@ FROM mcr.microsoft.com/dotnet/core/aspnet:2.2
 WORKDIR /app
 COPY --from=build-env /app/out .
 ENTRYPOINT ["dotnet", "Trader.VolumeSpike.dll"]
+#

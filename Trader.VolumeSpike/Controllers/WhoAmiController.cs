@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Globalization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Serilog;
 using Trader.VolumeSpike.Common.Configuration;
@@ -14,9 +14,11 @@ namespace Trader.VolumeSpike.Controllers
 	{
 		private readonly IOptions<AppSettings> _appSettings;
 		private readonly IVolumeRecordService _volumeRecordService;
+        public IConfiguration Configuration;
 
-		public WhoAmiController(IOptions<AppSettings> appSettings, IVolumeRecordService volumeRecordService)
+		public WhoAmiController(IConfiguration configuration, IOptions<AppSettings> appSettings, IVolumeRecordService volumeRecordService)
 		{
+            Configuration = configuration;
 			_appSettings = appSettings;
 			_volumeRecordService = volumeRecordService;
 		}
@@ -30,6 +32,8 @@ namespace Trader.VolumeSpike.Controllers
 			{
 				LocalTime = DateTime.UtcNow.ToLocalTime().ToString("MM/dd/yyyy hh:mm tt"),
 				UtcTime = DateTime.UtcNow.ToString("MM/dd/yyyy hh:mm tt"),
+                MongoConnectionString = Configuration.GetSection("ConnectionStrings:Mongo").Value,
+                EnvironmentVariables = Environment.GetEnvironmentVariables(),
 				DataProcessingSetting = _appSettings.Value.DataProcessing,
 				LastVolumeRecord = lastVolumeRecord,
 				LastVolumeRecordDate = lastVolumeRecord?.Date.ToLocalTime().ToString("MM/dd/yyyy hh:mm tt")

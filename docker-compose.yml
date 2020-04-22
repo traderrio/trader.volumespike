@@ -6,3 +6,8 @@ services:
     build:
       context: .
       dockerfile: Trader.VolumeSpike/Dockerfile
+
+networks:
+  default:
+    external:
+      name: traderr

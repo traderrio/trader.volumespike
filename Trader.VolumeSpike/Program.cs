@@ -20,9 +20,9 @@ namespace Trader.VolumeSpike
 			PathToContentRoot = Path.GetDirectoryName(pathToExe);
 
 			var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-			var isDevelopment = env == EnvironmentName.Development;
+			var isDevelopmentOrDocker = env == EnvironmentName.Development || env == "Docker";
 
-			if (isDevelopment)
+            if (isDevelopmentOrDocker)
 			{
 				PathToContentRoot = Directory.GetCurrentDirectory();
 			}
@@ -48,9 +48,9 @@ namespace Trader.VolumeSpike
 			try
 			{
 				Log.Warning("VolumeSpikes is running...");
-                Log.Warning($"Is Development? {isDevelopment}");
+                Log.Warning($"Is Development? {isDevelopmentOrDocker}");
 
-                if (isDevelopment)
+                if (isDevelopmentOrDocker)
 				{
 					CreateWebHostBuilder(args).Build().Run();
 				}
@@ -83,8 +83,7 @@ namespace Trader.VolumeSpike
 				.UseStartup<Startup>()
 				.UseDefaultServiceProvider(options => options.ValidateScopes = false)
 				.CaptureStartupErrors(true)
-				.UseUrls("http://localhost:8005/")
-				.UseSerilog();
+                .UseSerilog();
 		}
 	}
 }
