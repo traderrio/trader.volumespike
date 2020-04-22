@@ -12,6 +12,7 @@ using Trader.VolumeSpike.Common.Configuration;
 using Trader.VolumeSpike.Infrastructure;
 using Trader.VolumeSpike.Services.Interfaces;
 using Microsoft.Extensions.Logging;
+using Trader.Dto;
 
 namespace Trader.VolumeSpike.Services
 {
@@ -27,7 +28,7 @@ namespace Trader.VolumeSpike.Services
         private readonly IVolumeRecordService _volumeRecordService;
         private readonly ILogger<VolumeSpikesDetector> _logger;
 
-        private IList<SymbolDetails> ValidSymbols { get; set; }
+        private IList<SymbolDetailsDto> ValidSymbols { get; set; }
 
         public VolumeSpikesDetector(IMessageHub messageHub,
 	        IOptions<AppSettings> appSettings,

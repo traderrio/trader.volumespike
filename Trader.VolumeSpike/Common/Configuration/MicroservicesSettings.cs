@@ -3,5 +3,6 @@
     public class MicroservicesSettings
     {
         public string PolygonStockPricesWs { get; set; }
+        public string TraderrApi { get; set; }
     }
 }

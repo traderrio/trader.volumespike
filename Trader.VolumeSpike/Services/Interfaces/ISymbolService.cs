@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using Trader.Domain;
+using Trader.Dto;
 
 namespace Trader.VolumeSpike.Services.Interfaces
 {
 	public interface ISymbolService
 	{
-		List<SymbolDetails> GetValidSymbols();
+		List<SymbolDetailsDto> GetValidSymbols();
 	}
 }

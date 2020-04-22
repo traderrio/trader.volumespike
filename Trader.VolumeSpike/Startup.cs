@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using StackExchange.Redis.Extensions.Core;
-using StackExchange.Redis.Extensions.Core.Configuration;
 using StackExchange.Redis.Extensions.MsgPack;
 using Trader.VolumeSpike.Common.Configuration;
 using Trader.VolumeSpike.Infrastructure;
@@ -64,16 +63,7 @@ namespace Trader.VolumeSpike
 				return new LastTradesDbContext(db, appSettings);
 			});
 
-			services.AddSingleton<ITraderDbContext>(opt =>
-			{
-				var lastTradesConnectionString = new MongoConnectionString(Configuration.GetConnectionString("Traderr"));
-				var client = new MongoClient(lastTradesConnectionString.Settings);
-				var db = client.GetDatabase(lastTradesConnectionString.Database);
-				var appSettings = opt.GetRequiredService<IOptions<AppSettings>>();
-				return new TraderDbContext(db, appSettings);
-			});
-
-			services.AddSingleton<IMessageHub, MessageHub>();
+            services.AddSingleton<IMessageHub, MessageHub>();
 			services.AddSingleton<ICacheClient, StackExchangeRedisCacheClient>();
 			services.AddSingleton<ISerializer, MsgPackObjectSerializer>();
 			services.AddSingleton<IVolumeSpikesDetector, VolumeSpikesDetector>();

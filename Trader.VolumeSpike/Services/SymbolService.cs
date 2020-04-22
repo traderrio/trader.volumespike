@@ -1,27 +1,44 @@
 ﻿using System.Collections.Generic;
-using MongoDB.Driver;
-using MongoDB.Driver.Linq;
-using Trader.Common.Enums;
-using Trader.Domain;
-using Trader.VolumeSpike.Infrastructure.DbContext.Interfaces;
+using System.Linq;
+using Microsoft.Extensions.Options;
+using Flurl.Http;
+using MessagePack;
+using Microsoft.Extensions.Logging;
+using Trader.Dto;
+using Trader.VolumeSpike.Common.Configuration;
+using Trader.VolumeSpike.Infrastructure;
 using Trader.VolumeSpike.Services.Interfaces;
 
 namespace Trader.VolumeSpike.Services
 {
 	public class SymbolService : ISymbolService
 	{
-		private readonly IMongoCollection<SymbolDetails> _symbolCollection;
-		public SymbolService(ITraderDbContext dbContext)
-		{
-			_symbolCollection = dbContext.GetCollection<SymbolDetails>();
-		}
+        private readonly IOptions<AppSettings> _appSettings;
+        private readonly ILogger<ISymbolService> _logger;
 
-		public List<SymbolDetails> GetValidSymbols()
+		public SymbolService(IOptions<AppSettings> appSettings, ILogger<ISymbolService> logger)
 		{
-			return _symbolCollection
-									.AsQueryable()
-									.Where(x => !x.IsOtc)
-									.ToList();
+            _appSettings = appSettings;
+            _logger = logger;
+        }
+
+		public List<SymbolDetailsDto> GetValidSymbols()
+		{
+            var url = $"{_appSettings.Value.Microservices.TraderrApi}/api/integration/symbol-details";
+
+            var response =  url.GetJsonAsync<BinaryIntegrationResponse>().GetAwaiter().GetResult();
+
+            if (!response.Success)
+            {
+                _logger.LogError(response.Message);
+                return new List<SymbolDetailsDto>();
+            }
+
+            var symbols = MessagePackSerializer.Deserialize<IList<SymbolDetailsDto>>(response.Result, MessagePack.Resolvers.ContractlessStandardResolver.Instance);
+
+			return symbols
+                        .Where(x => !x.IsOtc)
+                        .ToList();
 		}
 	}
 }
