@@ -20,7 +20,7 @@ namespace Trader.VolumeSpike
 			PathToContentRoot = Path.GetDirectoryName(pathToExe);
 
 			var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-			var isDevelopmentOrDocker = env == EnvironmentName.Development || env == "Docker";
+			var isDevelopmentOrDocker = env == EnvironmentName.Development || env == "Docker" || env == "CentOS";
 
             if (isDevelopmentOrDocker)
 			{
