@@ -9,12 +9,15 @@ Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-co
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		CentOS|Any CPU = CentOS|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Docker|Any CPU = Docker|Any CPU
 		Release|Any CPU = Release|Any CPU
 		Staging|Any CPU = Staging|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7F7D3AD7-141F-48EB-8815-15EC0CFDE6EE}.CentOS|Any CPU.ActiveCfg = CentOS|Any CPU
+		{7F7D3AD7-141F-48EB-8815-15EC0CFDE6EE}.CentOS|Any CPU.Build.0 = CentOS|Any CPU
 		{7F7D3AD7-141F-48EB-8815-15EC0CFDE6EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7F7D3AD7-141F-48EB-8815-15EC0CFDE6EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F7D3AD7-141F-48EB-8815-15EC0CFDE6EE}.Docker|Any CPU.ActiveCfg = Docker|Any CPU
@@ -23,6 +26,8 @@ Global
 		{7F7D3AD7-141F-48EB-8815-15EC0CFDE6EE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7F7D3AD7-141F-48EB-8815-15EC0CFDE6EE}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
 		{7F7D3AD7-141F-48EB-8815-15EC0CFDE6EE}.Staging|Any CPU.Build.0 = Staging|Any CPU
+		{7F8ACEE8-3C04-4EC0-BC79-5FA88CD718F8}.CentOS|Any CPU.ActiveCfg = CentOS|Any CPU
+		{7F8ACEE8-3C04-4EC0-BC79-5FA88CD718F8}.CentOS|Any CPU.Build.0 = CentOS|Any CPU
 		{7F8ACEE8-3C04-4EC0-BC79-5FA88CD718F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7F8ACEE8-3C04-4EC0-BC79-5FA88CD718F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F8ACEE8-3C04-4EC0-BC79-5FA88CD718F8}.Docker|Any CPU.ActiveCfg = Docker|Any CPU
