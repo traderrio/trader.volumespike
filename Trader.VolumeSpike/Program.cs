@@ -16,18 +16,23 @@ namespace Trader.VolumeSpike
 
 		public static int Main(string[] args)
 		{
-			var pathToExe = Process.GetCurrentProcess().MainModule.FileName;
-			PathToContentRoot = Path.GetDirectoryName(pathToExe);
+            PathToContentRoot = Directory.GetCurrentDirectory();
 
 			var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-			var isDevelopmentOrDocker = env == EnvironmentName.Development || env == "Docker" || env == "CentOS";
+            var isWindowsService = env == "Production";
 
-            if (isDevelopmentOrDocker)
-			{
-				PathToContentRoot = Directory.GetCurrentDirectory();
-			}
 
-            var configuration = new ConfigurationBuilder()
+            if (isWindowsService)
+            {
+                var processModule = Process.GetCurrentProcess().MainModule;
+                if (processModule != null)
+                {
+                    var pathToExe = processModule.FileName;
+                    PathToContentRoot = Path.GetDirectoryName(pathToExe);
+                }
+            }
+
+			var configuration = new ConfigurationBuilder()
 				.SetBasePath(PathToContentRoot)
 				.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
 				.AddJsonFile($"appsettings.{env ?? "Development"}.json", optional: true)
@@ -47,16 +52,15 @@ namespace Trader.VolumeSpike
 
 			try
 			{
-				Log.Warning("VolumeSpikes is running...");
-                Log.Warning($"Is Development? {isDevelopmentOrDocker}");
+				Log.Warning($"VolumeSpikes is running on {env}");
 
-                if (isDevelopmentOrDocker)
+                if (isWindowsService)
 				{
-					CreateWebHostBuilder(args).Build().Run();
-				}
+                    CreateWebHostBuilder(args).Build().RunAsService();
+                }
 				else
 				{
-					CreateWebHostBuilder(args).Build().RunAsService();
+                    CreateWebHostBuilder(args).Build().Run();
 				}
 
 				return 0;

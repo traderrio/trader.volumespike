@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Trader.VolumeSpike", "Trader.VolumeSpike\Trader.VolumeSpike.csproj", "{7F7D3AD7-141F-48EB-8815-15EC0CFDE6EE}"
 EndProject
-Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{7F8ACEE8-3C04-4EC0-BC79-5FA88CD718F8}"
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{D3C85A2C-1BD5-40CB-91F9-23AE3CC717CD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,16 +26,16 @@ Global
 		{7F7D3AD7-141F-48EB-8815-15EC0CFDE6EE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7F7D3AD7-141F-48EB-8815-15EC0CFDE6EE}.Staging|Any CPU.ActiveCfg = Staging|Any CPU
 		{7F7D3AD7-141F-48EB-8815-15EC0CFDE6EE}.Staging|Any CPU.Build.0 = Staging|Any CPU
-		{7F8ACEE8-3C04-4EC0-BC79-5FA88CD718F8}.CentOS|Any CPU.ActiveCfg = CentOS|Any CPU
-		{7F8ACEE8-3C04-4EC0-BC79-5FA88CD718F8}.CentOS|Any CPU.Build.0 = CentOS|Any CPU
-		{7F8ACEE8-3C04-4EC0-BC79-5FA88CD718F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7F8ACEE8-3C04-4EC0-BC79-5FA88CD718F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7F8ACEE8-3C04-4EC0-BC79-5FA88CD718F8}.Docker|Any CPU.ActiveCfg = Docker|Any CPU
-		{7F8ACEE8-3C04-4EC0-BC79-5FA88CD718F8}.Docker|Any CPU.Build.0 = Docker|Any CPU
-		{7F8ACEE8-3C04-4EC0-BC79-5FA88CD718F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7F8ACEE8-3C04-4EC0-BC79-5FA88CD718F8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7F8ACEE8-3C04-4EC0-BC79-5FA88CD718F8}.Staging|Any CPU.ActiveCfg = Debug|Any CPU
-		{7F8ACEE8-3C04-4EC0-BC79-5FA88CD718F8}.Staging|Any CPU.Build.0 = Debug|Any CPU
+		{D3C85A2C-1BD5-40CB-91F9-23AE3CC717CD}.CentOS|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3C85A2C-1BD5-40CB-91F9-23AE3CC717CD}.CentOS|Any CPU.Build.0 = Debug|Any CPU
+		{D3C85A2C-1BD5-40CB-91F9-23AE3CC717CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3C85A2C-1BD5-40CB-91F9-23AE3CC717CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3C85A2C-1BD5-40CB-91F9-23AE3CC717CD}.Docker|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3C85A2C-1BD5-40CB-91F9-23AE3CC717CD}.Docker|Any CPU.Build.0 = Debug|Any CPU
+		{D3C85A2C-1BD5-40CB-91F9-23AE3CC717CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3C85A2C-1BD5-40CB-91F9-23AE3CC717CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3C85A2C-1BD5-40CB-91F9-23AE3CC717CD}.Staging|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3C85A2C-1BD5-40CB-91F9-23AE3CC717CD}.Staging|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
